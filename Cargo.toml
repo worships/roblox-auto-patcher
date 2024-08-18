@@ -1,0 +1,12 @@
+[package]
+name = "roblox-auto-patcher"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.1", features = ["derive"] }
+base64 = "0.13.0"
+hex = "0.4.2"
+rand = "0.8.5"
+rsa = "0.9.6"
+pem = "3.0.4"
