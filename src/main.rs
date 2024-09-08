@@ -2,6 +2,9 @@
 // Written by: Walnut (@worships / @aircanister / @source-value)
 // Description: Automatically patch older roblox clients (2019 and under)
 
+mod utilities; // Import the utilities module
+mod constants; // Import the constants module
+
 use clap::{Arg, Command};
 use hex;
 use std::error::Error;
@@ -62,15 +65,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     let overwrite = matches.get_flag("overwrite");
     let rbxsig2 = matches.get_flag("rbxsig2");
 
-    // rbxsig2 patching isnt available yet, will allow for >2017 patching
-    // still gotta write a key generator for it
     if rbxsig2 {
         println!("Patching >2017 clients is not possible at this time, please stick to 2017 and under!\n--rbxsig2 patching is currently not available, exiting!");
         return Ok(());
     }
 
-    // safety,  
-    // todo: add safe byte adding for longer domains, maybe shorter as well
     if url.len() != 10 {
         println!("Error: URL must be exactly 10 characters long.");
         return Ok(());
@@ -88,7 +87,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut file_data = fs::read(file_path)?;
 
-    replace_hex(&mut file_data, &roblox_hex, &url_hex, verbose)?;
+    // Use the replace_hex function from the utilities module
+    utilities::replace_hex(&mut file_data, &roblox_hex, &url_hex, verbose)?;
 
     if !Path::new("PublicKeyBlob.txt").exists() {
         println!("Generating certificate...");
@@ -98,9 +98,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let public_key_hex = read_public_key()?;
 
-    let cert_hex = "426749414141436B414142535530457841415141414145414151436A62557978394F585442635745416F6E5A4F66416F543759684D532B4C32315777415A6C73456A767A48585170756C7061734E4668433155367442583663385165793266695242584870716268377641433775326E695436644D4C4C715939557A4949306A79784B442F45554F44635148544B70624D313846526F62714C63764B30444E6449614877797072374E526E53576B344E5868744D3076343057372F6D7233355078624A3872513D3D";
-
-    replace_hex(&mut file_data, cert_hex, &public_key_hex, verbose)?;
+    // Use the CERT_HEX constant from the constants module
+    utilities::replace_hex(&mut file_data, constants::CERT_HEX, &public_key_hex, verbose)?;
 
     let output_path = if overwrite {
         file_path.clone()
@@ -114,32 +113,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     let duration = start_time.elapsed();
     println!("Patched successfully in {}ms!", duration.as_millis());
 
-    Ok(())
-}
-
-fn replace_hex(data: &mut Vec<u8>, search_hex: &str, replace_hex: &str, verbose: bool) -> Result<(), Box<dyn Error>> {
-    let search_bytes = hex::decode(search_hex)?;
-    let replace_bytes = hex::decode(replace_hex)?;
-
-    if replace_bytes.len() != search_bytes.len() {
-        if verbose {
-            println!("Error: Replacement hex string must be the same length as the search hex string");
-            println!("Search hex string: {}", search_hex);
-            println!("Replacement hex string: {}", replace_hex);
-            println!("Search hex length: {}", search_bytes.len());
-            println!("Replacement hex length: {}", replace_bytes.len());
-        }
-        return Err(Box::from("Replacement hex string must be the same length as the search hex string"));
-    }
-
-    for i in 0..=(data.len() - search_bytes.len()) {
-        if &data[i..i + search_bytes.len()] == &search_bytes[..] {
-            data[i..i + replace_bytes.len()].copy_from_slice(&replace_bytes);
-            if verbose {
-                println!("Replaced at offset 0x{:X}: {} -> {}", i, search_hex, replace_hex);
-            }
-        }
-    }
     Ok(())
 }
 
