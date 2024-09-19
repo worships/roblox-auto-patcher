@@ -15,7 +15,7 @@ use std::time::Instant;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let matches = Command::new("roblox-auto-patcher")
-        .version("0.1.0")
+        .version("0.2.0")
         .author("Walnut (@worships / @aircanister)")
         .about("automatically patch older roblox clients!")
         .arg(
