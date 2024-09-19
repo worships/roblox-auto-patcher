@@ -25,7 +25,7 @@ pub fn replace_hex(data: &mut Vec<u8>, search_hex: &str, replace_hex: &str, verb
         if &data[i..i + search_bytes.len()] == &search_bytes[..] {
             data[i..i + replace_bytes.len()].copy_from_slice(&replace_bytes);
             if verbose {
-                println!("Replaced at offset 0x{:X}: {} -> {}", i, search_hex, replace_hex);
+                println!("Replaced at 0x{:X}: {} -> {}", i, search_hex, replace_hex);
             }
         }
     }

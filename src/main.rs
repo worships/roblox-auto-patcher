@@ -1,19 +1,17 @@
 // Roblox Auto Patcher
-// Written by: Walnut (@worships / @aircanister / @source-value)
+// Written by: Walnut (@worships / @aircanister)
 // Description: Automatically patch older roblox clients (2019 and under)
 
-mod utilities; // Import the utilities module
-mod constants; // Import the constants module
+mod constants;
+mod gen;
+mod utilities;
 
 use clap::{Arg, Command};
 use hex;
 use std::error::Error;
-use std::fs::{self, File};
-use std::io::Write;
+use std::fs::{self};
 use std::path::Path;
-use std::process::Command as ProcessCommand;
-use std::time::{Duration, Instant};
-use std::thread;
+use std::time::Instant;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let matches = Command::new("roblox-auto-patcher")
@@ -65,16 +63,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     let overwrite = matches.get_flag("overwrite");
     let rbxsig2 = matches.get_flag("rbxsig2");
 
-    if rbxsig2 {
-        println!("Patching >2017 clients is not possible at this time, please stick to 2017 and under!\n--rbxsig2 patching is currently not available, exiting!");
-        return Ok(());
-    }
-
     if url.len() != 10 {
         println!("Error: URL must be exactly 10 characters long.");
         return Ok(());
     }
-
     if !url.chars().all(|c| c.is_ascii_alphanumeric() || c == '.') {
         println!("Error: URL contains invalid characters. Only ASCII alphanumeric characters and periods are allowed.");
         return Ok(());
@@ -82,54 +74,66 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let url_hex = hex::encode(url.as_bytes());
     let roblox_hex = hex::encode("roblox.com");
-
     let start_time = Instant::now();
-
     let mut file_data = fs::read(file_path)?;
 
-    // Use the replace_hex function from the utilities module
     utilities::replace_hex(&mut file_data, &roblox_hex, &url_hex, verbose)?;
 
-    if !Path::new("PublicKeyBlob.txt").exists() {
+    if !Path::new("rbxsig_public.pub").exists() {
         println!("Generating certificate...");
-        run_key_generator()?;
-        println!("Certificate generated! You can find it in the root directory of the project.");
+        gen::generate_keypair(1096, "rbxsig_private.pem", "rbxsig_public.pub")?;
+        println!("Certificate generated! You can find it located in the current directory.\n");
     }
 
-    let public_key_hex = read_public_key()?;
+    let public_key_hex = read_public_key("rbxsig_public.pub")?;
+    utilities::replace_hex(
+        &mut file_data,
+        constants::RBXSIG_HEX,
+        &public_key_hex,
+        verbose,
+    )?;
 
-    // Use the CERT_HEX constant from the constants module
-    utilities::replace_hex(&mut file_data, constants::CERT_HEX, &public_key_hex, verbose)?;
+    if rbxsig2 {
+        if !Path::new("rbxsig2_public.pub").exists() {
+            println!("Generating rbxsig2 certificate...");
+            gen::generate_keypair(2084, "rbxsig2_private.pem", "rbxsig2_public.pub")?;
+            println!(
+                "rbxsig2 certificate generated! You can find it located in the current directory.\n"
+            );
+        }
+
+        let public_key_hex2 = read_public_key("rbxsig2_public.pub")?;
+        utilities::replace_hex(
+            &mut file_data,
+            constants::RBXSIG2_HEX,
+            &public_key_hex2,
+            verbose,
+        )?;
+    }
 
     let output_path = if overwrite {
         file_path.clone()
     } else {
-        format!("{}_PATCHED.exe", Path::new(&file_path).file_stem().unwrap().to_str().unwrap())
+        let mut path = Path::new(file_path).to_path_buf();
+        let file_stem = path.file_stem().unwrap().to_str().unwrap();
+        let extension = path.extension().unwrap().to_str().unwrap();
+        path.set_file_name(format!("{}_patched.{}", file_stem, extension));
+        path.to_str().unwrap().to_string()
     };
 
-    let mut output_file = File::create(output_path)?;
-    output_file.write_all(&file_data)?;
-
-    let duration = start_time.elapsed();
-    println!("Patched successfully in {}ms!", duration.as_millis());
+    fs::write(&output_path, file_data)?;
+    println!("Completed in {:.2?}!", start_time.elapsed());
 
     Ok(())
 }
 
-fn run_key_generator() -> Result<(), Box<dyn Error>> {
-    let output = ProcessCommand::new("KeyGenerator/Roblox.KeyGenerator.exe")
-        .output()?;
-
-    if !output.status.success() {
-        return Err(Box::from("Failed to run key generator executable"));
-    }
-
-    thread::sleep(Duration::from_secs(5));
-    Ok(())
-}
-
-fn read_public_key() -> Result<String, Box<dyn Error>> {
-    let public_key_base64 = fs::read_to_string("PublicKeyBlob.txt")?;
+fn read_public_key(file_name: &str) -> Result<String, Box<dyn std::error::Error>> {
+    let public_key_base64 = std::fs::read_to_string(file_name)?;
+    let public_key_base64 = public_key_base64
+        .lines()
+        .filter(|line| !line.starts_with("-----"))
+        .collect::<Vec<&str>>()
+        .join("");
     let public_key_hex = hex::encode(public_key_base64.trim());
     Ok(public_key_hex)
 }
