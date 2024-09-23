@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .short('f')
                 .long("filePath")
                 .value_name("FILE")
-                .help("Path to the input executable file (Player, RCC, and Studio)")
+                .help("Path to the input executable file (Player, RCC, Bootstrapper, and Studio)")
                 .required(true),
         )
         .arg(
@@ -55,6 +55,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .action(clap::ArgAction::SetTrue)
                 .help("Overwrite the original executable"),
         )
+        .arg(
+            Arg::new("bootstrapper")
+                .short('b')
+                .long("bootstrapper")
+                .action(clap::ArgAction::SetTrue)
+                .help("Patch the ROBLOX bootstrapper"),
+        )
         .get_matches();
 
     let file_path = matches.get_one::<String>("filePath").unwrap();
@@ -62,6 +69,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let verbose = matches.get_flag("verbose");
     let overwrite = matches.get_flag("overwrite");
     let rbxsig2 = matches.get_flag("rbxsig2");
+    let bootstrapper = matches.get_flag("bootstrapper");
 
     if url.len() != 10 {
         println!("Error: URL must be exactly 10 characters long.");
@@ -79,36 +87,38 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     utilities::replace_hex(&mut file_data, &roblox_hex, &url_hex, verbose)?;
 
-    if !Path::new("rbxsig_public.pub").exists() {
-        println!("Generating certificate...");
-        gen::generate_keypair(1096, "rbxsig_private.pem", "rbxsig_public.pub")?;
-        println!("Certificate generated! You can find it located in the current directory.\n");
-    }
-
-    let public_key_hex = read_public_key("rbxsig_public.pub")?;
-    utilities::replace_hex(
-        &mut file_data,
-        constants::RBXSIG_HEX,
-        &public_key_hex,
-        verbose,
-    )?;
-
-    if rbxsig2 {
-        if !Path::new("rbxsig2_public.pub").exists() {
-            println!("Generating rbxsig2 certificate...");
-            gen::generate_keypair(2084, "rbxsig2_private.pem", "rbxsig2_public.pub")?;
-            println!(
-                "rbxsig2 certificate generated! You can find it located in the current directory.\n"
-            );
+    if !bootstrapper {
+        if !Path::new("rbxsig_public.pub").exists() {
+            println!("Generating certificate...");
+            gen::generate_keypair(1096, "rbxsig_private.pem", "rbxsig_public.pub")?;
+            println!("Certificate generated! You can find it located in the current directory.\n");
         }
 
-        let public_key_hex2 = read_public_key("rbxsig2_public.pub")?;
+        let public_key_hex = read_public_key("rbxsig_public.pub")?;
         utilities::replace_hex(
             &mut file_data,
-            constants::RBXSIG2_HEX,
-            &public_key_hex2,
+            constants::RBXSIG_HEX,
+            &public_key_hex,
             verbose,
         )?;
+
+        if rbxsig2 {
+            if !Path::new("rbxsig2_public.pub").exists() {
+                println!("Generating rbxsig2 certificate...");
+                gen::generate_keypair(2084, "rbxsig2_private.pem", "rbxsig2_public.pub")?;
+                println!(
+                    "rbxsig2 certificate generated! You can find it located in the current directory.\n"
+                );
+            }
+
+            let public_key_hex2 = read_public_key("rbxsig2_public.pub")?;
+            utilities::replace_hex(
+                &mut file_data,
+                constants::RBXSIG2_HEX,
+                &public_key_hex2,
+                verbose,
+            )?;
+        }
     }
 
     let output_path = if overwrite {
