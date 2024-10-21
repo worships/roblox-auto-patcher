@@ -52,7 +52,7 @@ Linux/MacOS:
 - [x] Use in-house certificate generator
 - [x] Support for --rbxsig2 (roblox uses different signatures for different versions)
 - [x] Be able to patch bootstrapper
-- [ ] Support for longer than 10 character domains (requires ASLR disabling)
+- [ ] Support for longer than 10 character domains (requires ASLR disabling, plus other patches)
 
 ## Contribution & Credits
 Want to contribute? Simply create a pull request, or if you are experiencing problems please open an issue.
