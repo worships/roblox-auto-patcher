@@ -46,6 +46,8 @@ Linux/MacOS:
 - [x] 2018 
 - [x] 2019
 
+For anything greater than 2019, I recommend checking out [lure](https://github.com/lrre-foss/lure), it is more involved however it has more capabilities & effectively does the same thing this patcher does.
+
 ## Todo
 - [x] Replace roblox.com urls with user specified
 - [x] Replace --rbxsig certificates
