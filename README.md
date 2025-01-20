@@ -6,7 +6,7 @@ This program uses the safest way of patching, by simply replacing the signing ce
 ## Warnings & Notices
 > You will have to put the signing keys in certain coreguis/corescripts/join scripts, and files. If you didn't already know this, you probably shouldn't be using this program.
 
-> This program should work perfectly fine for 2017 through 2019 clients. Other versions may require additional patches, mainly >2014 clients.
+> This program should work perfectly fine for 2015 through 2019 clients. Other versions may require additional patches, mainly >2014 clients.
 
 > This program does not support iOS, and Android patching. Sadly, you will have to figure out how todo these on your own.
 
