@@ -90,7 +90,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     if !bootstrapper {
         if !Path::new("rbxsig_public.pub").exists() {
             println!("Generating certificate...");
-            gen::generate_keypair(1096, "rbxsig_private.pem", "rbxsig_public.pub")?;
+            gen::generate_keypair(1024, "rbxsig_private.pem", "rbxsig_public.pub", "rbxsig_blob.txt")?;
             println!("Certificate generated! You can find it located in the current directory.\n");
         }
 
@@ -105,7 +105,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         if rbxsig2 {
             if !Path::new("rbxsig2_public.pub").exists() {
                 println!("Generating rbxsig2 certificate...");
-                gen::generate_keypair(2084, "rbxsig2_private.pem", "rbxsig2_public.pub")?;
+                gen::generate_keypair(2048, "rbxsig2_private.pem", "rbxsig2_public.pub", "rbxsig2_blob.txt")?;
                 println!(
                     "rbxsig2 certificate generated! You can find it located in the current directory.\n"
                 );
