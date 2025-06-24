@@ -6,6 +6,7 @@ mod constants;
 mod gen;
 mod utilities;
 
+use base64::Engine;
 use clap::{Arg, Command};
 use hex;
 use std::error::Error;
@@ -88,13 +89,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     utilities::replace_hex(&mut file_data, &roblox_hex, &url_hex, verbose)?;
 
     if !bootstrapper {
-        if !Path::new("rbxsig_public.pub").exists() {
+        if !Path::new("rbxsig_blob.txt").exists() {
             println!("Generating certificate...");
             gen::generate_keypair(1024, "rbxsig_private.pem", "rbxsig_public.pub", "rbxsig_blob.txt")?;
             println!("Certificate generated! You can find it located in the current directory.\n");
         }
 
-        let public_key_hex = read_public_key("rbxsig_public.pub")?;
+        let public_key_hex = read_public_key("rbxsig_blob.txt")?;
         utilities::replace_hex(
             &mut file_data,
             constants::RBXSIG_HEX,
@@ -103,7 +104,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         )?;
 
         if rbxsig2 {
-            if !Path::new("rbxsig2_public.pub").exists() {
+            if !Path::new("rbxsig2_blob.txt").exists() {
                 println!("Generating rbxsig2 certificate...");
                 gen::generate_keypair(2048, "rbxsig2_private.pem", "rbxsig2_public.pub", "rbxsig2_blob.txt")?;
                 println!(
@@ -111,7 +112,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 );
             }
 
-            let public_key_hex2 = read_public_key("rbxsig2_public.pub")?;
+            let public_key_hex2 = read_public_key("rbxsig2_blob.txt")?;
             utilities::replace_hex(
                 &mut file_data,
                 constants::RBXSIG2_HEX,
@@ -138,12 +139,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn read_public_key(file_name: &str) -> Result<String, Box<dyn std::error::Error>> {
-    let public_key_base64 = std::fs::read_to_string(file_name)?;
-    let public_key_base64 = public_key_base64
-        .lines()
-        .filter(|line| !line.starts_with("-----"))
-        .collect::<Vec<&str>>()
-        .join("");
-    let public_key_hex = hex::encode(public_key_base64.trim());
+    let public_key_blob = std::fs::read_to_string(file_name)?;
+    let public_key_hex = hex::encode(public_key_blob);
     Ok(public_key_hex)
 }
