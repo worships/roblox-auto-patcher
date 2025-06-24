@@ -60,5 +60,3 @@ For anything greater than 2019, I recommend checking out [lure](https://github.c
 
 ## Contribution & Credits
 Want to contribute? Simply create a pull request, or if you are experiencing problems please open an issue.
-
-~~The rbxsig KeyGenerator was originally from [this archive](https://www.mediafire.com/file/msbfxp1ades6v9j/tools.zip/file), although this project uses a [version I decompiled](https://github.com/worships/Roblox-KeyGenerator-Decompiled). I am unaware of who created it, but if you know please open up an issue or pull request, so they can be credited properly.~~
