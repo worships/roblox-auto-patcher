@@ -3,8 +3,7 @@ Automatically and easily patch 2019 and below Roblox Player, Studio and RCC.
 
 This program uses the safest way of patching, by simply replacing the signing certificates and replacing all roblox.com urls with one of your choice. This avoids disabling trust check, and signing outright.
 
-A standalone version of the certificate generator is available [here](https://github.com/worships/rbxsign/tree/main)
-
+A standalone version of the certificate generator is available [here](https://github.com/worships/rbxsign/tree/main)<br/>
 ***If you don't want to make a revival or deal with patching even, I recommend checking out [Fluster](https://github.com/sbeltranc/Fluster/tree/main), which is an old roblox launcher that my friend made!***
 
 ## Warnings & Notices
